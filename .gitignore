@@ -1,0 +1,6 @@
+/env
+/firefox
+/.vscode
+/cache
+__pycache__/
+*.png
