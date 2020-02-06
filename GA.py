@@ -83,7 +83,6 @@ class chromosome():
         # # width = target.width
         # # height = target.height
         # fitness = 0
-        
 
         # for i in range(0, width):
         #     for j in range(0, height):
