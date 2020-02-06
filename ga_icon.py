@@ -1,9 +1,10 @@
-from utils import Shell, calc_similarity, draw_frame
+from utils import Chromo, calc_similarity, draw_frame
 from PIL import Image
 from tqdm import trange
 from numpy import ndarray, empty, argmax, argsort
 from numpy.random import choice
 from numpy.random import uniform as rand
+from numpy.random import randint
 from matplotlib import pyplot as plt
 
 
@@ -15,7 +16,7 @@ class GAIcon:
     def __init__(self, **kargs):
         for karg in kargs:
             setattr(self, karg, kargs[karg])
-        self.n_genes = Shell.get_n_gene()
+        self.n_genes = Chromo.get_n_gene()
         # 去掉原图中的alpha通道
         img = Image.open(self.target_img).resize(
             (self.desired_size, self.desired_size))
@@ -25,56 +26,67 @@ class GAIcon:
         with open(self.desired_dir + "target.png", 'wb') as fp:
             self.target_img.save(fp)
 
-    def calc_fitness(self, pops: ndarray) -> ndarray:
+    def calc_fitness(self, pop: ndarray) -> ndarray:
         '''计算所有种群的适应度'''
-        fitness = empty(len(pops))
-        for i, pop in enumerate(pops):
-            shells = [Shell(v) for v in pop]
-            im = draw_frame(shells, self.desired_size)
+        fitness = empty(len(pop))
+        for i, shell in enumerate(pop):
+            chromos = [Chromo(v) for v in shell]
+            im = draw_frame(chromos, self.desired_size)
             fitness[i] = calc_similarity(self.target_img, im)
         return fitness
 
     def init_pops(self) -> ndarray:
         # 初始种群
-        init_pops = rand(size=(self.n_pops, self.n_shells, self.n_genes))
+        init_pops = rand(size=(self.n_indis, self.n_chromos, self.n_genes))
         return init_pops
 
-    def crossover(self, pops: ndarray) -> ndarray:
+    def crossover(self, pop: ndarray) -> ndarray:
         '''交叉'''
-        alteres = list(range(len(pops)))
+        alteres = list(range(len(pop)))
         while len(alteres):
             idx1 = choice(alteres)
             alteres.remove(idx1)
             idx2 = choice(alteres)
             alteres.remove(idx2)
             if rand() < self.cross_rate:
-                for shell_idx in range(self.n_shells):
+                cross_point = randint(low=1, high=self.n_genes - 1)
+                for chromo_idx in range(self.n_chromos):
                     if rand() >= 0.5:
-                        pops[idx1][shell_idx], pops[idx2][shell_idx] = \
-                            pops[idx2][shell_idx], pops[idx1][shell_idx]
-        return pops
+                        temp = pop[idx1][chromo_idx][:cross_point]
+                        pop[idx1][chromo_idx][:cross_point] = \
+                            pop[idx2][chromo_idx][:cross_point]
+                        pop[idx2][chromo_idx][:cross_point] = \
+                            temp
+        return pop
 
-    def mutation(self, pops) -> ndarray:
-        ''' 变异 '''
-        for pop in pops:
+    def mutation(self, pop) -> ndarray:
+        ''' 整个染色体变异？或者是基因变异？ '''
+        for shell in pop:
             if rand() < self.mut_rate:
-                for idx in choice(list(range(len(pop))), size=6):
-                    pop[idx] = rand(size=pop[idx].size)
-        return pops
+                # for _ in range(10):
+                shell[int(rand() * self.n_chromos)] = rand(size=self.n_genes)
+        return pop
 
-    def selection(self, fitnesses, pops) -> ndarray:
+    def selection(self, fitnesses, pop) -> ndarray:
         '''淘汰'''
-        n_knock = int(self.knock_rate * self.n_pops)
+        n_knock = int(self.knock_rate * self.n_indis)
         indxs = argsort(fitnesses)
+        # for i in range(n_knock):
+        # pop[indxs[i]] = pop[indxs[- i - 1]]
         for knock_indx in indxs[:n_knock]:
-            [indx1, indx2] = indxs[-2:]
-            point = int(self.n_genes * rand())
-            for shell_idx in range(self.n_shells):
-                pops[knock_indx][shell_idx][:point] = \
-                    pops[indx1][shell_idx][:point]
-                pops[knock_indx][shell_idx][point:] = \
-                    pops[indx2][shell_idx][point:]
-        return pops
+            # [indx1, indx2] = -1, choice(indxs[n_knock:])
+            # indx1 = choice(indxs[n_knock:-1])
+            indx1 = -2
+            indx2 = -1
+            # point = self.n_genes // 2
+            for chromo_idx in range(self.n_chromos):
+                if rand() < 0.86:
+                    pop[knock_indx][chromo_idx] = \
+                        pop[indx2][chromo_idx]
+                else:
+                    pop[knock_indx][chromo_idx] = \
+                        pop[indx1][chromo_idx]
+        return pop
 
     def money_num_Gen(self):
         '''生成器，生成类似1, 2, 5, 10, 20, 50....的无限长序列'''
@@ -89,27 +101,28 @@ class GAIcon:
             money_num_gen = self.money_num_Gen()
             catch_time = next(money_num_gen)
             # 初始化种群
-            pops = self.init_pops()
+            pop = self.init_pops()
             for generation in trange(self.max_iter):
                 # 计算fitness
-                fitnesses = self.calc_fitness(pops)
+                fitnesses = self.calc_fitness(pop)
                 fitness_trace.append(max(fitnesses))
                 # 存个点
                 if generation == catch_time:
                     catch_time = next(money_num_gen)
                     idx = argmax(fitnesses)
-                    shells = [Shell(i) for i in pops[idx]]
-                    im = draw_frame(shells, self.desired_size)
+                    chromos = [Chromo(i) for i in pop[idx]]
+                    im = draw_frame(chromos, self.desired_size)
                     with open(self.desired_dir + "第{}代.png".format(
                             generation), 'wb') as fp:
                         im.save(fp)
                 # 筛选父代
-                pops = self.selection(fitnesses, pops)
+                pop = self.selection(fitnesses, pop)
                 # 交叉
-                pops = self.crossover(pops)
+                pop = self.crossover(pop)
                 # 变异
-                pops = self.mutation(pops)
-                plt.plot(fitness_trace, 'b')
+                pop = self.mutation(pop)
+                plt.clf()
+                plt.plot(fitness_trace)
                 plt.pause(0.01)
 
         finally:

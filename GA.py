@@ -9,6 +9,7 @@ Created on Mon Apr  8 16:17:50 2019
 from PIL import Image, ImageDraw
 from PIL.Image import blend, composite
 import random
+from numpy import abs, sum, asarray, int16
 
 
 class triangle():
@@ -74,17 +75,24 @@ class chromosome():
         # self.im.show()
     def calFit(self, target):
         # 此函数用于计算fitness 将染色体对应的图像的三通道数值分别和目标图像对应位置相减后求和 用图像大小除图像差即可得到fitness
+        mat_target = asarray(target, dtype=int16)
+        mat_im = asarray(self.im, dtype=int16)
         width = target.width
         height = target.height
-        fitness = 0
-        for i in range(0, width):
-            for j in range(0, height):
-                target_point = target.getpixel((i, j))
-                this_point = self.im.getpixel((i, j))
-                length = len(target_point)
-                for k in range(0, length):
-                    fitness += abs(this_point[k]-target_point[k])
-        self.fitness = float(4*width*height)/fitness
+        self.fitness = 3 * width * height / sum(abs(mat_target - mat_im))
+        # # width = target.width
+        # # height = target.height
+        # fitness = 0
+        
+
+        # for i in range(0, width):
+        #     for j in range(0, height):
+        #         target_point = target.getpixel((i, j))
+        #         this_point = self.im.getpixel((i, j))
+        #         length = len(target_point)
+        #         for k in range(0, length):
+        #             fitness += abs(this_point[k]-target_point[k])
+        # self.fitness = float(3*width*height)/fitness
 
 
 class GA():

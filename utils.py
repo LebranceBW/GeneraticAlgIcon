@@ -1,21 +1,21 @@
 from PIL import ImageDraw, Image
 from PIL.Image import composite
-from numpy import asarray, sum
+from numpy import asarray, sum, int16
 from typing import List
 
 
-# 定义shell
-class Shell:
-    '''三角形的壳
+# 定义染色体
+class Chromo:
+    '''染色体，控制贝壳三角形花纹,每个染色体有9个基因。
     Parameters:
     ----------
     point*: Tuple(float, float)
     color: Tuple(float, float, float)
-    注： 所有的浮点数都在0~1之间
+    注： 所有的浮点数都在0~1之间。
     '''
 
     def __init__(self, args):
-        assert len(args) == Shell.get_n_gene()
+        assert len(args) == Chromo.get_n_gene()
         self.point1 = (args[0], args[1])
         self.point2 = (args[2], args[3])
         self.point3 = (args[4], args[5])
@@ -29,27 +29,27 @@ class Shell:
 
     @classmethod
     def get_n_gene(cls) -> int:
+        '''返回一个染色体上的基因数量'''
         return 9
 
 
-def draw_frame(shells: List[Shell], size) -> Image:
-    '''绘制半透明壳叠加在一起后的图形。'''
+def draw_frame(chromos: List[Chromo], size) -> Image:
+    '''综合所有染色体，绘制表现型。'''
     background = Image.new("RGB", (size, size), "#FFFFFF")
-    for shell in shells:
-        # shell = Shell(shell)
-        shell_im = Image.new("RGB", background.size, "#FFFFFF")
+    for chromo in chromos:
+        chromo_im = Image.new("RGB", background.size, "#000000")
         mask = Image.new("L", background.size, 255)
-        imDraw = ImageDraw.Draw(shell_im)
-        imDraw.polygon(shell.get_points(size), shell.get_color())
+        imDraw = ImageDraw.Draw(chromo_im)
+        imDraw.polygon(chromo.get_points(size), chromo.get_color())
         maskDraw = ImageDraw.Draw(mask)
-        maskDraw.polygon(shell.get_points(size), 128)
-        background = composite(background, shell_im, mask)
+        maskDraw.polygon(chromo.get_points(size), fill=128)
+        background = composite(background, chromo_im, mask)
     return background
 
 
 def calc_similarity(target: Image, im: Image) -> float:
     '''计算两幅图之间的相似度, 将两幅RGB图各个通道值差值计算'''
     size = im.size[0]
-    mat_target = asarray(target)
-    mat_im = asarray(im)
+    mat_target = asarray(target, dtype=int16)
+    mat_im = asarray(im, dtype=int16)
     return 3 * size * size / sum(abs(mat_target - mat_im))
