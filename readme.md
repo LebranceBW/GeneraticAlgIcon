@@ -1,10 +1,4 @@
----
-title: 长得像chrome的贝壳
-date: 2020-02-07 09:22:12
-tags: 遗传算法
-mathjax: true
----
-[toc]
+# 长得像Chrome的贝壳
 
 ## 背景故事
 
