@@ -4,4 +4,5 @@
 /cache
 /cache2
 __pycache__/
+bird/
 # *.png

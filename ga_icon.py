@@ -60,7 +60,9 @@ class GAIcon:
         ''' 整个染色体变异？或者是基因变异？ '''
         for shell in pop:
             if rand() < self.mut_rate:
-                shell[int(rand() * self.n_chromos)] = rand(size=self.n_genes)
+                idx = int(rand() * self.n_chromos)
+                shell[idx] += rand(-0.3, 0.3, size=self.n_genes)
+                shell[idx] = abs(shell[idx])
         return pop
 
     def selection(self, fitnesses, pop) -> ndarray:
@@ -100,6 +102,8 @@ class GAIcon:
                 fitness_trace.append(max(fitnesses))
                 # 存个点
                 if generation == catch_time:
+                    if self.mut_rate > 0.1:
+                        self.mut_rate *= 0.9
                     catch_time = next(money_num_gen)
                     idx = argmax(fitnesses)
                     chromos = [Chromo(i) for i in pop[idx]]
@@ -113,9 +117,9 @@ class GAIcon:
                 pop = self.crossover(pop)
                 # 变异
                 pop = self.mutation(pop)
-                plt.clf()
-                plt.plot(fitness_trace)
-                plt.pause(0.01)
+                # plt.clf()
+                # plt.plot(fitness_trace)
+                # plt.pause(0.01)
 
         finally:
             plt.savefig(self.desired_dir + "trace.png")
