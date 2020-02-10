@@ -3,4 +3,5 @@
 /.vscode
 /cache
 __pycache__/
+/windows
 # *.png
