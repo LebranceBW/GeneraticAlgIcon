@@ -5,7 +5,6 @@ from tqdm import trange
 from numpy import ndarray, empty, argmax, argsort
 from numpy.random import choice
 from numpy.random import uniform as rand
-from numpy.random import randint
 from matplotlib import pyplot as plt
 
 
