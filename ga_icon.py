@@ -1,3 +1,4 @@
+# encooding:utf-8
 from utils import Chromo, calc_similarity, draw_frame
 from PIL import Image
 from tqdm import trange
@@ -108,8 +109,8 @@ class GAIcon:
                     idx = argmax(fitnesses)
                     chromos = [Chromo(i) for i in pop[idx]]
                     im = draw_frame(chromos, self.desired_size)
-                    with open(self.desired_dir + "第{}代.png".format(
-                            generation), 'wb') as fp:
+                    with open(self.desired_dir + "{}.png".format(generation),
+                              'wb') as fp:
                         im.save(fp)
                 # 筛选父代
                 pop = self.selection(fitnesses, pop)
@@ -117,9 +118,7 @@ class GAIcon:
                 pop = self.crossover(pop)
                 # 变异
                 pop = self.mutation(pop)
-                # plt.clf()
-                # plt.plot(fitness_trace)
-                # plt.pause(0.01)
 
         finally:
+            plt.plot(fitness_trace)
             plt.savefig(self.desired_dir + "trace.png")

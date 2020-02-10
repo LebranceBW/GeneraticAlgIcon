@@ -5,4 +5,5 @@
 /cache2
 __pycache__/
 bird/
+/windows
 # *.png
