@@ -1,19 +1,16 @@
 # encooding:utf-8
-from utils import Chromo, calc_similarity, draw_frame
 from PIL import Image
-from tqdm import trange
+from matplotlib import pyplot as plt
 from numpy import ndarray, empty, argmax, argsort
 from numpy.random import choice
 from numpy.random import uniform as rand
-from numpy.random import randint
-from matplotlib import pyplot as plt
+from tqdm import trange
+import os
+
+from utils import Chromo, calc_similarity, draw_frame
 
 
 class GAIcon:
-    """
-
-    """
-
     def __init__(self, **kargs):
         for karg in kargs:
             setattr(self, karg, kargs[karg])
@@ -24,11 +21,12 @@ class GAIcon:
         new_im = Image.new("RGB", img.size, "#FFFFFF")
         new_im.paste(img, mask=img.split()[3])
         self.target_img = new_im
+        os.makedirs(self.desired_dir, exist_ok=True)
         with open(self.desired_dir + "target.png", 'wb') as fp:
             self.target_img.save(fp)
 
     def calc_fitness(self, pop: ndarray) -> ndarray:
-        '''计算所有种群的适应度'''
+        """计算所有种群的适应度"""
         fitness = empty(len(pop))
         for i, shell in enumerate(pop):
             chromos = [Chromo(v) for v in shell]
@@ -42,7 +40,7 @@ class GAIcon:
         return init_pops
 
     def crossover(self, pop: ndarray) -> ndarray:
-        '''交叉'''
+        """交叉"""
         alteres = list(range(len(pop)))
         while len(alteres):
             idx1 = choice(alteres)
@@ -58,7 +56,7 @@ class GAIcon:
         return pop
 
     def mutation(self, pop) -> ndarray:
-        ''' 整个染色体变异？或者是基因变异？ '''
+        """ 整个染色体变异？或者是基因变异？ """
         for shell in pop:
             if rand() < self.mut_rate:
                 idx = int(rand() * self.n_chromos)
@@ -67,7 +65,7 @@ class GAIcon:
         return pop
 
     def selection(self, fitnesses, pop) -> ndarray:
-        '''淘汰'''
+        """淘汰"""
         n_knock = int(self.knock_rate * self.n_indis)
         indxs = argsort(fitnesses)
         for knock_indx in indxs[:n_knock]:
@@ -84,7 +82,7 @@ class GAIcon:
         return pop
 
     def money_num_Gen(self):
-        '''生成器，生成类似1, 2, 4, 8 10, 20, 40....的无限长序列'''
+        """生成器，生成类似1, 2, 4, 8 10, 20, 40....的无限长序列"""
         captials = [1, 2, 4, 8]
         while True:
             yield from captials
